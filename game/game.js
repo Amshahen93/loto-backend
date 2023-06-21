@@ -1,21 +1,21 @@
 import { v4 as uuidv4 } from 'uuid';
 import Ticket from '../ticket/ticket.js';
-import { io } from '../server.js'
-import { games } from './game-rout.js'
+import { games, sockets } from './game-rout.js'
 
 
 export class Game {
+    #interval;
     constructor (name, creator) {
         this.id = uuidv4();
         this.name = name;
         this.creator = creator;
         this.tickets = [];
         this.socket_connection_id = uuidv4();
-        this.sockets = [];
+        sockets[this.id] = [];
     }
 
     setSocket(socket) {
-        this.sockets.push(socket);
+        sockets[this.id].push(socket);
     }
 
     joinGame(user = {}) {
@@ -38,7 +38,7 @@ export class Game {
 
     startGame(listener) {
         this.#createNumbers();
-        this.interval = setInterval(() => {
+        this.#interval = setInterval(() => {
             const number = this.numbers.splice(
                 Math.random() * this.numbers.length, 1
             )[0];
@@ -58,7 +58,7 @@ export class Game {
             if (listener) {
                 listener(data);
             }
-            this.sockets.forEach((socket) => {
+            sockets[this.id].forEach((socket) => {
                 socket.emit('game-listener', JSON.stringify(data));
             });
         }, 8 * 1000)
@@ -66,8 +66,8 @@ export class Game {
 
     stopGame(id) {
         this.numbers = [];
-        if (this.interval) {
-            clearInterval(this.interval);
+        if (this.#interval) {
+            clearInterval(this.#interval);
         }
         if (id === this.creator.id) {
             deleteGame(this.id);
@@ -83,7 +83,7 @@ export class Game {
     
     deleteGame() {
         clearInterval(this.interval);
-        this.sockets = [];
+        delete sockets[this.id];
     }
 }
 

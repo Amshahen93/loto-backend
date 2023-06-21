@@ -29,18 +29,24 @@ export default class Ticket extends Array {
 
     #makeEmptyItems() {
         let array = [];
-        for (let i = 0; i < 9; i++) {
-            array.push(i);
-        }
-        array = array.concat(array.slice(0, array.length));
         for (const line of this) {
             for (let i = 0; i < 4; i++) {
+                if (!array.length) {
+                    this.#fillArray(array);
+                }
                 const emptyIndex = array.splice(
                     Math.floor(Math.random() * array.length), 1
                 )[0];
                 line[emptyIndex].empty = true;
                 delete line[emptyIndex].value;
             }
+        }
+
+    }
+
+    #fillArray(array) {
+        for (let i = 0; i < 9; i++) {
+            array.push(i);
         }
     }
 
