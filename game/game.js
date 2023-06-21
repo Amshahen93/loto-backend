@@ -11,7 +11,11 @@ export class Game {
         this.creator = creator;
         this.tickets = [];
         this.socket_connection_id = uuidv4();
-        this.#startSocket();
+        this.sockets = [];
+    }
+
+    setSocket(socket) {
+        this.sockets.push(socket);
     }
 
     joinGame(user = {}) {
@@ -26,7 +30,6 @@ export class Game {
             ticket: new Ticket(), 
         }
         this.tickets.push(ticket);
-        console.log(this.tickets.length);
         if (this.tickets.length === 1) {
             this.startGame();
         }
@@ -34,13 +37,11 @@ export class Game {
     }
 
     startGame(listener) {
-        console.log('start game');
         this.#createNumbers();
         this.interval = setInterval(() => {
-            console.log('interval');
             const number = this.numbers.splice(
                 Math.random() * this.numbers.length, 1
-            );
+            )[0];
             let data;
             if (!this.numbers.length) {
                 stopGame();
@@ -57,7 +58,9 @@ export class Game {
             if (listener) {
                 listener(data);
             }
-            io.emit(`game-listener/${this.socket_connection_id}`, JSON.stringify(data));
+            this.sockets.forEach((socket) => {
+                socket.emit('game-listener', JSON.stringify(data));
+            });
         }, 8 * 1000)
     }
 
@@ -77,18 +80,10 @@ export class Game {
             this.numbers.push(i)
         }
     }
-
-    #startSocket() {
-        io.on(`game-listener/${this.socket_connection_id}`, (socket) => {
-            if (this.started) {
-                console.log(socket);
-            }
-        });
-    }
     
     deleteGame() {
         clearInterval(this.interval);
-        io.off(`game-listener/${this.socket_connection_id}`);
+        this.sockets = [];
     }
 }
 

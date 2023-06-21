@@ -21,7 +21,6 @@ export default class Ticket extends Array {
             const one = new TicketItem(false);
             const two = new TicketItem(false);
             const tree = new TicketItem(false);
-            // console.log(`i ${i} => ${one.value}, ${two.value}, ${tree.value}`)
             this[0].push(one);
             this[1].push(two);
             this[2].push(tree);
@@ -56,9 +55,7 @@ class TicketItem {
     }
 
     #getNumber() {
-        // console.log(TicketItem.numbers);
         if (!TicketItem.numbers.length) {
-            // console.log('no number');
             TicketItem.startAgain(1, 9);
         }
         return TicketItem.numbers.splice(
@@ -67,11 +64,9 @@ class TicketItem {
     }
 
     static startAgain(from, to) {
-        // console.log(from, to);
         TicketItem.numbers = [];
         for(let i = from; i <= to; i++) {
             TicketItem.numbers.push(i);
         }
-        // console.log(TicketItem.numbers);
     }
 }

@@ -2,16 +2,14 @@ import express from 'express';
 import { Game } from "./game.js";
 // const io = new Server(server);
 export const gameRout = express.Router();
-
 export const games = [];
 
-export let testGame = []
 gameRout.get('/games', (req, res) => {
     res.send(games);
 });
 
 gameRout.get('/:id', (req, res) => {
-    const game = games.filter(game => game.id === req.params.id);
+    const game = games.find(game => game.id === req.params.id);
     if (!req.params.id || !game) {
         res.status(404).json({
             message: `game not found id ${id}`
@@ -22,7 +20,6 @@ gameRout.get('/:id', (req, res) => {
 });
 
 gameRout.post('/create', (req, res) => {
-    // console.log(req);
     const body = req.body;
     if (!body || !body.name || !body.username || !body.email) {
         res.status(400).json({error: 'body must contain valid game name, username and email'})
@@ -31,7 +28,6 @@ gameRout.post('/create', (req, res) => {
             username: body.username,
             email:  body.email
         });
-        testGame.push(game);
         games.push(game);
         
         res.send(game);
@@ -42,7 +38,6 @@ gameRout.post('/join/:id', (req, res) => {
     const id = req.params.id;
     const body = req.body;
     const game = games.find(game => game.id === req.params.id);
-    console.log(game);
     if (body) {
         
     }
