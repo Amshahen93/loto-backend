@@ -5,54 +5,79 @@ import { games, sockets } from './game-rout.js'
 
 export class Game {
     #interval;
+    #currentNumber;
+    started = false;
     constructor (name, creator) {
         this.id = uuidv4();
         this.name = name;
         this.creator = creator;
         this.tickets = [];
-        this.socket_connection_id = uuidv4();
         sockets[this.id] = [];
+        this.counter = 0;
     }
 
     setSocket(socket) {
         sockets[this.id].push(socket);
     }
 
+    setAsTouched(ticketId, number) {
+        if (this.started && number === this.#currentNumber) {
+            const ticket = this.tickets.find(ticket => ticket.id === ticketId);
+            for (const number of ticket.ticket) {
+                if (number.number === number) {
+                    number.checked = true;
+                    return ticket;
+                }
+            }
+        }
+        return false;
+        
+    }
+
     joinGame(user = {}) {
-        if (this.started) {
-            return false;
+        let ticket;
+        if (user.id) {
+            ticket = this.tickets.find(ticket => ticket.user?.id === user.id)
         }
-        user.id = uuidv4();
-        user.socket_connection_id = this.socket_connection_id
-        const ticket = {
-            user: user,
-            id: uuidv4(),
-            ticket: new Ticket(), 
-        }
-        this.tickets.push(ticket);
-        if (this.tickets.length === 1) {
-            this.startGame();
+        if (!ticket) {
+            if (!user.id) {
+                user.id = uuidv4();
+            }
+            ticket = {
+                user: user,
+                id: uuidv4(),
+                ticket: new Ticket(),
+            }
+            this.tickets.push(ticket);
+            if (this.tickets.length === 2) {
+                this.startGame();
+            }
         }
         return ticket;
     }
 
     startGame(listener) {
         this.#createNumbers();
+        this.started = true;
         this.#interval = setInterval(() => {
-            const number = this.numbers.splice(
+            this.#currentNumber = this.numbers.splice(
                 Math.random() * this.numbers.length, 1
             )[0];
+            if (!this.numbers.length && this.counter < 2) {
+                this.counter++;
+                this.#createNumbers();
+            }
             let data;
             if (!this.numbers.length) {
                 stopGame();
                 data = {
-                    number: number,
+                    number: this.#currentNumber,
                     end: true
                 }
             } else {
                 data = {
-                    number: number,
-                    end: true
+                    number: this.#currentNumber,
+                    end: false
                 }
             }
             if (listener) {
